@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>MyShows</title>
+</head>
+<body>
+    <div id="MyShowsConfigPage" data-role="page" class="page type-interior pluginConfigurationPage" data-require="emby-input,emby-button,emby-select,emby-checkbox">
+        <div data-role="content">
+            <div class="content-primary">
+                <h1>MyShows TV Shows Tracker</h1>
+                <form id="MyShowsConfigForm">
+
+                    <div id="login-container" hidden>
+                        <h3>It seems you are not logged in, do you wish to log in?</h3>
+                        <div class="inputContainer">
+                            <input is="emby-input" id="login" type="text" label="Login" />
+                        </div>
+                        <div class="inputContainer">
+                            <input is="emby-input" id="password" type="password" label="Password" />
+                        </div>
+                        <button onclick="MyShows.startLoginPassword();" is="emby-button" type="button" class="raised button-submit block"><span>Log In</span></button>
+                        <!--<button onclick="MyShows.startLoginCode();" is="emby-button" type="button" class="raised button-submit block"><span>Log In via OAuth</span></button>-->
+                        <button onclick="location.href='https://myshows.me/';" is="emby-button" type="button" class="raised block"><span>Create an account</span></button>
+                    </div>
+
+                    <div id="config-container" hidden>
+                        <h3>You have linked to account: <b id="linked-account"></b>.<button onclick="MyShows.unlink();" is="emby-button" type="button" class="raised button-submit button-delete"><span>Unlink</span></button></h3>
+
+                        <div>
+                            <button is="emby-button" type="submit" class="raised button-submit block"><span>${ButtonSave}</span></button>
+                        </div>
+
+                        <textarea id="config-dump"></textarea>
+                    </div>
+
+                    <!--<div>
+                        <button is="emby-button" type="submit" class="raised button-submit block emby-button" data-theme="b" id="login-button">
+                            <span>Login</span>
+                        </button>
+                    </div>-->
+                </form>
+            </div>
+        </div>
+
+        <script>
+            //const redirectUri = ApiClient.getUrl('/MyShows/oauth')
+
+            //var MyShowsConfig = {
+            //    pluginUniqueId: 'ef35f6b1-7fe6-44ca-a215-232089fb9bc7',
+            //    //apiParams: {
+            //    //    scope: 'basic',
+            //    //    response_type: 'code',
+            //    //    client_id: null,
+            //    //    redirect_uri: redirectUri
+            //    //},
+            //    //clientId: null,
+            //    //apiUri: null
+            //}
+
+            //function populateUsers(users) {
+            //    users.forEach(function (user) {
+            //        $("#user-selector").append(new Option(user.Name, user.Id));
+            //    })
+            //}
+
+            //$('#MyShowsConfigPage').on('pageinit', (e) => {
+            //    const page = this
+
+            //    //const request = {
+            //    //    url: ApiClient.getUrl('/MyShows/initialize'),
+            //    //    type: 'POST',
+            //    //    data: { redirectUri: redirectUri },
+            //    //    headers: { accept: "application/json" }
+            //    //}
+            //    const request = {
+            //        url: ApiClient.getUrl('/MyShows/initialize'),
+            //        headers: { accept: "application/json" }
+            //    }
+            //    ApiClient.fetch(request).then((result) => {
+            //        MyShowsConfig.pluginUniqueId = result.plugin_id
+            //        MyShowsConfig.clientId = result.client_id
+            //        MyShowsConfig.apiUri = result.api_uri
+            //        //MyShowsConfig.apiParams.redirect_uri = result.redirect_uri
+            //    })
+            //})
+
+            $('#MyShowsConfigPage').on('pageshow', (e) => {
+                //Dashboard.showLoadingMsg()
+
+                //const request = {
+                //    url: ApiClient.getUrl('/MyShows/initialize'),
+                //    headers: { accept: "application/json" }
+                //}
+                //ApiClient.fetch(request).then((result) => {
+                //    MyShowsConfig.pluginUniqueId = result.plugin_id
+                //    MyShowsConfig.clientId = result.client_id
+                //    MyShowsConfig.apiUri = result.api_uri
+                //    //MyShowsConfig.apiParams.redirect_uri = result.redirect_uri
+                //}).then(() => {
+                    MyShows.loadConfig()//.then(e => Dashboard.hideLoadingMsg())
+                //})
+
+
+                //ApiClient.getPluginConfiguration(MyShowsConfig.pluginUniqueId).then((config) => {
+                //    const userId = ApiClient.getCurrentUserId()
+                //    const user = config.Users.some(e => e.Id == userId && e.AccessToken != null && e.AccessToken != '')
+
+                //    if (user) {
+                //        $("#config-dump").html(user)
+                //        $("#config-container").show()
+                //    } else {
+                //        $("#login-container").show()
+                //    }
+
+                //    Dashboard.hideLoadingMsg()
+                //})
+            })
+
+            $('#MyShowsConfigPage').on('submit', (e) => {
+                //Dashboard.showLoadingMsg()
+                MyShows.saveConfig()
+                //Dashboard.hideLoadingMsg()
+                return false
+            })
+
+            var MyShows = {
+                pluginId: 'ef35f6b1-7fe6-44ca-a215-232089fb9bc7',
+                configCache: [],
+
+                startLoginPassword: (e) => {
+                    (typeof Dashboard.showLoadingMsg === 'function') && Dashboard.showLoadingMsg()
+
+                    const userId = ApiClient.getCurrentUserId()
+                    const apiParams = {
+                        login: $('#login').val(),
+                        password: $('#password').val()
+                    }
+                    const request = {
+                        type: 'POST',
+                        url: ApiClient.getUrl('/MyShows/v2/login/' + userId),
+                        headers: { accept: "application/json" },
+                        data: apiParams
+                    }
+                    ApiClient.fetch(request).then((result) => {
+                        if (!result.success) {
+                            Dashboard.alert({
+                                message: 'An error occurred when trying to authorize device: ' + result.statusText
+                            })
+                        } else {
+                            MyShows.loadConfig().then(() => MyShows.saveConfig())
+                        }
+                    }).finally(() => (typeof Dashboard.hideLoadingMsg === 'function') && Dashboard.hideLoadingMsg())
+
+                    return false
+                },
+
+                //$('#login-button').on('click', () => {
+                startLoginCode: (e) => {
+                    MyShows.getOAuthConfig().then(MyShows.continueLoginCode.bind(MyShows))
+
+                    return false
+                //})
+                },
+
+                continueLoginCode: (config) => {
+
+                    const userId = ApiClient.getCurrentUserId()
+                    console.log(config, userId)
+                    const redirectUri = ApiClient.getUrl('/MyShows/v2/oauth/' + userId)
+                    const apiParams = {
+                        scope: 'basic',
+                        response_type: 'code',
+                        client_id: config.client_id,
+                        redirect_uri: redirectUri
+                    }
+                    const query = new URLSearchParams(apiParams).toString()
+                    const url = config.api_uri + '?' + query
+                    const callback = window.open(url, 'MyShowsOAuthCallback', 'status=0,toolbar=0,location=0,menubar=0,height=600,width=800')
+                    callback.onbeforeunload = () => {
+                        MyShows.loadConfig().then(() => MyShows.saveConfig())
+                    }
+
+                    //return false
+                    //})
+                },
+
+                getOAuthConfig: () => {
+                    const request = {
+                        url: ApiClient.getUrl('/MyShows/v2/initialize'),
+                        headers: { accept: "application/json" }
+                    }
+                    return ApiClient.fetch(request)
+                },
+
+                unlink: () => {
+                    const userId = ApiClient.getCurrentUserId()
+                    MyShows.configCache.Users = MyShows.configCache.Users.filter(e => e.Id != userId)
+                    MyShows.saveConfig().then(() => MyShows.loadConfig())
+                },
+
+                loadConfig: () => {
+                    (typeof Dashboard.showLoadingMsg === 'function') && Dashboard.showLoadingMsg()
+
+                    return ApiClient.getPluginConfiguration(MyShows.pluginId).then((config) => {
+                        MyShows.configCache = config
+                        const userId = ApiClient.getCurrentUserId()
+                        const user = config.Users.find(e => e.Id == userId && e.AccessToken != null && e.AccessToken != '')
+
+                        if (user) {
+                            $("#config-dump").text(JSON.stringify(user))
+                            $("#linked-account").text(user.Name)
+                            $("#config-container").show()
+                            $("#login-container").hide()
+                        } else {
+                            $("#config-container").hide()
+                            $("#login-container").show()
+                        }
+
+                        (typeof Dashboard.hideLoadingMsg === 'function') && Dashboard.hideLoadingMsg()
+                    })
+                },
+
+                saveConfig: () => {
+                    return ApiClient.updatePluginConfiguration(MyShows.pluginId, MyShows.configCache).then(Dashboard.processPluginConfigurationUpdateResult)
+                }
+            }
+        </script>
+    </div>
+</body>
+</html>
