@@ -38,37 +38,38 @@ namespace MyShows.Configuration
         /// <param name="json"></param>
         /// <param name="http"></param>
         /// <returns>true if you can use token</returns>
-        #pragma warning disable CS1998
         public async Task<bool> EnsureAccessTokenValid(IJsonSerializer json, IHttpClient http)
         {
-            //if (DateTime.Compare(ExpirationTime, DateTime.Now) >= 0)
-            //{
-            //    return true;
-            //}
+            if (DateTime.Compare(ExpirationTime, DateTime.Now) >= 0) return true;
 
-            //try
-            //{
-            //    var (token, error) = await OAuthHelper.RefreshToken(json, http, RefreshToken);
-            //    if (error != null)
-            //    {
-            //        foreach (var config in Plugin.Instance.Configuration.Users)
-            //        {
-            //            if (config.Id.Equals(Id)) Plugin.Instance.Configuration.RemoveUser(config);
-            //        }
-            //        return false;
-            //    }
-            //    AccessToken = token.access_token;
-            //    ExpirationTime = DateTime.Now.AddSeconds(token.expires_in);
-            //    return true;
-            //}
-            //catch (Exception e)
-            //{
-            //    return false;
-            //}
-            // TODO: fix this shit.
-            // for some reason refresh_token not working.
-            // returns {"error":"invalid_grant","error_description":"Invalid refresh token"}
-            return true;
+            try
+            {
+                var (token, error) = await OAuthHelper.RefreshToken(json, http, RefreshToken);
+                if (error != null)
+                {
+                    RemoveSelf();
+                    return false;
+                }
+
+                AccessToken = token.access_token;
+                RefreshToken = token.refresh_token;
+                ExpirationTime = DateTime.Now.AddSeconds(token.expires_in);
+                return true;
+            }
+            catch (Exception)
+            {
+                RemoveSelf();
+                return false;
+            }
+        }
+
+        private void RemoveSelf()
+        {
+            foreach (var config in Plugin.Instance.Configuration.Users)
+            {
+                if (config.Id.Equals(Id))
+                    Plugin.Instance.Configuration.RemoveUser(config);
+            }
         }
     }
 }

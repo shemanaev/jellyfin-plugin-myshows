@@ -33,6 +33,7 @@ namespace MyShows.MyShowsApi.Api20
             if (_lastWatchedShows.Contains(item.Id)) return true;
 
             var show = await GetShow(user, item);
+            if (show == default(ShowSummary)) return false;
 
             var success = await Execute<bool>(user, "manage.SetShowStatus", new ManageSetShowStatusArgs
             {
@@ -46,22 +47,22 @@ namespace MyShows.MyShowsApi.Api20
 
         public async Task<bool> CheckEpisode(UserConfig user, Episode item)
         {
-            var show = await GetShow(user, item.Series);
-            var episode = show.episodes.First(e => e.seasonNumber == item.Season.IndexNumber && e.episodeNumber == item.IndexNumber);
-
-            var success = await Execute<bool>(user, "manage.CheckEpisode", new ManageEpisodeArgs
-            {
-                id = episode.id
-            });
-            return success;
+            return await ToggleEpisode(user, item, true);
         }
 
         public async Task<bool> UnCheckEpisode(UserConfig user, Episode item)
         {
+            return await ToggleEpisode(user, item, false);
+        }
+
+        private async Task<bool> ToggleEpisode(UserConfig user, Episode item, bool check)
+        {
+            var method = check ? "manage.CheckEpisode" : "manage.UnCheckEpisode";
             var show = await GetShow(user, item.Series);
+            if (show == default(ShowSummary)) return false;
             var episode = show.episodes.First(e => e.seasonNumber == item.Season.IndexNumber && e.episodeNumber == item.IndexNumber);
 
-            var success = await Execute<bool>(user, "manage.UnCheckEpisode", new ManageEpisodeArgs
+            var success = await Execute<bool>(user, method, new ManageEpisodeArgs
             {
                 id = episode.id
             });
@@ -74,6 +75,7 @@ namespace MyShows.MyShowsApi.Api20
 
             var firstEpisode = seen.Any() ? seen.First() : unseen.First();
             var show = await GetShow(user, firstEpisode.Series);
+            if (show == default(ShowSummary)) return false;
 
             var seenIds = new List<int>();
             var unSeenIds = new List<int>();
@@ -123,6 +125,8 @@ namespace MyShows.MyShowsApi.Api20
                 source = source
             });
 
+            if (show == default(ShowSummary)) return show;
+
             show = await Execute<ShowSummary>(user, "shows.GetById", new ShowsGetByIdArgs
             {
                 showId = show.id,
@@ -139,6 +143,7 @@ namespace MyShows.MyShowsApi.Api20
             var isTokenValid = await user.EnsureAccessTokenValid(_json, _httpClient);
             if (!isTokenValid)
             {
+                _logger.LogWarning("AccessToken invalidated and RefreshToken isn't helped. Too bad.");
                 return default(T);
             }
 
