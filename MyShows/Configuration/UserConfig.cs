@@ -33,6 +33,11 @@ namespace MyShows.Configuration
         public DateTime ExpirationTime { get; set; }
 
         /// <summary>
+        /// Percentage after which to scrobble.
+        /// </summary>
+        public int ScrobbleAt { get; set; } = 90;
+
+        /// <summary>
         /// Ensure OAuth access_token is vaild and refresh if it's not.
         /// </summary>
         /// <param name="json"></param>

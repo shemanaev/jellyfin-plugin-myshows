@@ -1,3 +1,4 @@
+<!-- https://github.com/jellyfin/jellyfin-web/blob/master/src/strings/ru.json -->
 <!DOCTYPE html>
 <html>
 <head>
@@ -11,23 +12,32 @@
                 <form id="MyShowsConfigForm">
 
                     <div id="login-container" hidden>
-                        <h3>It seems you are not logged in, do you wish to log in?</h3>
                         <div class="inputContainer">
-                            <input is="emby-input" id="login" type="text" label="Login" />
+                            <input is="emby-input" id="login" type="text" label="${LabelUsername}" />
                         </div>
                         <div class="inputContainer">
-                            <input is="emby-input" id="password" type="password" label="Password" />
+                            <input is="emby-input" id="password" type="password" label="${LabelPassword}" />
                         </div>
-                        <button onclick="MyShows.startLoginPassword();" is="emby-button" type="button" class="raised button-submit block"><span>Log In</span></button>
-                        <!--<button onclick="MyShows.startLoginCode();" is="emby-button" type="button" class="raised button-submit block"><span>Log In via OAuth</span></button>-->
-                        <button onclick="location.href='https://myshows.me/';" is="emby-button" type="button" class="raised block"><span>Create an account</span></button>
+                        <button onclick="MyShows.startLoginPassword();" is="emby-button" type="button" class="raised button-submit block"><span>${ButtonSignIn}</span></button>
+                        <button onclick="location.href='https://myshows.me/';" is="emby-button" type="button" class="raised block"><span id="create-account">Create an account</span></button>
                     </div>
 
                     <div id="config-container" hidden>
-                        <h3>You have linked to account: <b id="linked-account"></b>.<button onclick="MyShows.unlink();" is="emby-button" type="button" class="raised button-submit button-delete"><span>Unlink</span></button></h3>
+                        <h3>Hello, <b id="linked-account">user</b>.</h3>
+                        <button onclick="MyShows.unlink();" is="emby-button" type="button" class="raised button-submit button-delete block"><span>${ButtonSignOut}</span></button>
+
+                        <div class="inputContainer"></div>
+
+                        <div class="inputContainer">
+                            <input is="emby-input" id="ScrobbleAt" type="number" min="0" max="100" pattern="[0-9]*" label="Scrobbling percentage:" />
+                            <div class="fieldDescription">
+                                Percentage after which to scrobble
+                            </div>
+                        </div>
 
                         <div>
                             <button is="emby-button" type="submit" class="raised button-submit block"><span>${ButtonSave}</span></button>
+                            <button is="emby-button" type="button" class="raised block" onclick="history.back();"><span>${ButtonCancel}</span></button>
                         </div>
                     </div>
                 </form>
@@ -36,6 +46,7 @@
 
         <script>
             $('#MyShowsConfigPage').on('pageshow', (e) => {
+                $('#create-account').html(Globalize.translate('MessageCreateAccountAt', 'MyShows'))
                 MyShows.loadConfig()
             })
 
@@ -123,6 +134,7 @@
                         const user = config.Users.find(e => e.Id == userId && e.AccessToken != null && e.AccessToken != '')
 
                         if (user) {
+                            $("#config-container #ScrobbleAt").val(user.ScrobbleAt)
                             $("#linked-account").text(user.Name)
                             $("#config-container").show()
                             $("#login-container").hide()
@@ -136,6 +148,9 @@
                 },
 
                 saveConfig: () => {
+                    const userId = ApiClient.getCurrentUserId()
+                    const user = MyShows.configCache.Users.find(e => e.Id == userId)
+                    user.ScrobbleAt = $("#config-container #ScrobbleAt").val()
                     return ApiClient.updatePluginConfiguration(MyShows.pluginId, MyShows.configCache).then(Dashboard.processPluginConfigurationUpdateResult)
                 }
             }

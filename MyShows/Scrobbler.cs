@@ -74,10 +74,7 @@ namespace MyShows
 
             // don't scrobble if percentage watched is below 90%
             float percentageWatched = (float)e.Session.PlayState.PositionTicks / (float)e.Session.NowPlayingItem.RunTimeTicks * 100f;
-            if (percentageWatched < 90) return;
-
-            // don't scrobble if video runtime is below 5 mins
-            if (e.Session.NowPlayingItem.RunTimeTicks < 60 * 10000 * 5) return;
+            if (percentageWatched < user.ScrobbleAt) return;
 
             var episode = e.Item as Episode;
             if (_lastScrobbled.Contains(episode.Id)) return;
