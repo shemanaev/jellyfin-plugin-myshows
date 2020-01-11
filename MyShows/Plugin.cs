@@ -19,14 +19,11 @@ namespace MyShows
         public Plugin(IApplicationPaths appPaths, IXmlSerializer xmlSerializer) : base(appPaths, xmlSerializer)
         {
             Instance = this;
-            //PollingTasks = new Dictionary<string, Task<bool>>();
         }
 
         public static Plugin Instance { get; private set; }
 
         public PluginConfiguration PluginConfiguration => Configuration;
-
-        //public Dictionary<string, Task<bool>> PollingTasks { get; set; }
 
         public IEnumerable<PluginPageInfo> GetPages()
         {
@@ -36,7 +33,12 @@ namespace MyShows
                 {
                     Name = Name,
                     EmbeddedResourcePath = string.Format("{0}.Configuration.configPage.html", GetType().Namespace)
-                }
+                },
+                new PluginPageInfo
+                {
+                    Name = "myshows.js",
+                    EmbeddedResourcePath = string.Format("{0}.Configuration.myshows.js", GetType().Namespace)
+                },
             };
         }
     }

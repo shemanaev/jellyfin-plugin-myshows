@@ -1,160 +1,42 @@
 <!-- https://github.com/jellyfin/jellyfin-web/blob/master/src/strings/ru.json -->
-<!DOCTYPE html>
-<html>
-<head>
-    <title>MyShows</title>
-</head>
-<body>
-    <div id="MyShowsConfigPage" data-role="page" class="page type-interior pluginConfigurationPage" data-require="emby-input,emby-button,emby-select,emby-checkbox">
-        <div data-role="content">
-            <div class="content-primary">
-                <h1>MyShows TV Shows Tracker</h1>
-                <form id="MyShowsConfigForm">
+<div data-role="page" class="page type-interior" data-controller="myshows.js">
+    <div>
+        <div class="content-primary">
 
-                    <div id="login-container" hidden>
-                        <div class="inputContainer">
-                            <input is="emby-input" id="login" type="text" label="${LabelUsername}" />
+            <h1>MyShows TV Shows Tracker</h1>
+            <form id="MyShowsConfigForm">
+
+                <div id="login-container" hidden>
+                    <div class="inputContainer">
+                        <input is="emby-input" id="login" type="text" label="${LabelUsername}" />
+                    </div>
+                    <div class="inputContainer">
+                        <input is="emby-input" id="password" type="password" label="${LabelPassword}" />
+                    </div>
+                    <button id="login-button" is="emby-button" type="button" class="raised button-submit block"><span>${ButtonSignIn}</span></button>
+                    <button onclick="location.href='https://myshows.me/';" is="emby-button" type="button" class="raised block"><span id="create-account">Create an account</span></button>
+                </div>
+
+                <div id="config-container" hidden>
+                    <h3>Hello, <b id="linked-account">user</b>.</h3>
+                    <button id="unlink-button" is="emby-button" type="button" class="raised button-submit button-delete block"><span>${ButtonSignOut}</span></button>
+
+                    <div class="inputContainer"></div>
+
+                    <div class="inputContainer">
+                        <input is="emby-input" id="ScrobbleAt" type="number" min="0" max="100" pattern="[0-9]*" label="Scrobbling percentage:" />
+                        <div class="fieldDescription">
+                            Percentage after which to scrobble
                         </div>
-                        <div class="inputContainer">
-                            <input is="emby-input" id="password" type="password" label="${LabelPassword}" />
-                        </div>
-                        <button onclick="MyShows.startLoginPassword();" is="emby-button" type="button" class="raised button-submit block"><span>${ButtonSignIn}</span></button>
-                        <button onclick="location.href='https://myshows.me/';" is="emby-button" type="button" class="raised block"><span id="create-account">Create an account</span></button>
                     </div>
 
-                    <div id="config-container" hidden>
-                        <h3>Hello, <b id="linked-account">user</b>.</h3>
-                        <button onclick="MyShows.unlink();" is="emby-button" type="button" class="raised button-submit button-delete block"><span>${ButtonSignOut}</span></button>
-
-                        <div class="inputContainer"></div>
-
-                        <div class="inputContainer">
-                            <input is="emby-input" id="ScrobbleAt" type="number" min="0" max="100" pattern="[0-9]*" label="Scrobbling percentage:" />
-                            <div class="fieldDescription">
-                                Percentage after which to scrobble
-                            </div>
-                        </div>
-
-                        <div>
-                            <button is="emby-button" type="submit" class="raised button-submit block"><span>${ButtonSave}</span></button>
-                            <button is="emby-button" type="button" class="raised block" onclick="history.back();"><span>${ButtonCancel}</span></button>
-                        </div>
+                    <div>
+                        <button is="emby-button" type="submit" class="raised button-submit block"><span>${ButtonSave}</span></button>
+                        <button is="emby-button" type="button" class="raised block" onclick="history.back();"><span>${ButtonCancel}</span></button>
                     </div>
-                </form>
-            </div>
+                </div>
+            </form>
+
         </div>
-
-        <script>
-            $('#MyShowsConfigPage').on('pageshow', (e) => {
-                $('#create-account').html(Globalize.translate('MessageCreateAccountAt', 'MyShows'))
-                MyShows.loadConfig()
-            })
-
-            $('#MyShowsConfigPage').on('submit', (e) => {
-                MyShows.saveConfig()
-                return false
-            })
-
-            var MyShows = {
-                pluginId: 'ef35f6b1-7fe6-44ca-a215-232089fb9bc7',
-                configCache: [],
-
-                startLoginPassword: (e) => {
-                    (typeof Dashboard.showLoadingMsg === 'function') && Dashboard.showLoadingMsg()
-
-                    const userId = ApiClient.getCurrentUserId()
-                    const apiParams = {
-                        login: $('#login').val(),
-                        password: $('#password').val()
-                    }
-                    const request = {
-                        type: 'POST',
-                        url: ApiClient.getUrl('/MyShows/v2/login/' + userId),
-                        headers: { accept: "application/json" },
-                        data: apiParams
-                    }
-                    ApiClient.fetch(request).then((result) => {
-                        if (!result.success) {
-                            Dashboard.alert({
-                                message: 'An error occurred when trying to authorize device: ' + result.statusText
-                            })
-                        } else {
-                            MyShows.loadConfig().then(() => MyShows.saveConfig())
-                        }
-                    }).finally(() => (typeof Dashboard.hideLoadingMsg === 'function') && Dashboard.hideLoadingMsg())
-
-                    return false
-                },
-
-                startLoginCode: (e) => {
-                    MyShows.getOAuthConfig().then(MyShows.continueLoginCode.bind(MyShows))
-
-                    return false
-                },
-
-                continueLoginCode: (config) => {
-
-                    const userId = ApiClient.getCurrentUserId()
-                    console.log(config, userId)
-                    const redirectUri = ApiClient.getUrl('/MyShows/v2/oauth/' + userId)
-                    const apiParams = {
-                        scope: 'basic',
-                        response_type: 'code',
-                        client_id: config.client_id,
-                        redirect_uri: redirectUri
-                    }
-                    const query = new URLSearchParams(apiParams).toString()
-                    const url = config.api_uri + '?' + query
-                    const callback = window.open(url, 'MyShowsOAuthCallback', 'status=0,toolbar=0,location=0,menubar=0,height=600,width=800')
-                    callback.onbeforeunload = () => {
-                        MyShows.loadConfig().then(() => MyShows.saveConfig())
-                    }
-                },
-
-                getOAuthConfig: () => {
-                    const request = {
-                        url: ApiClient.getUrl('/MyShows/v2/initialize'),
-                        headers: { accept: "application/json" }
-                    }
-                    return ApiClient.fetch(request)
-                },
-
-                unlink: () => {
-                    const userId = ApiClient.getCurrentUserId()
-                    MyShows.configCache.Users = MyShows.configCache.Users.filter(e => e.Id != userId)
-                    MyShows.saveConfig().then(() => MyShows.loadConfig())
-                },
-
-                loadConfig: () => {
-                    (typeof Dashboard.showLoadingMsg === 'function') && Dashboard.showLoadingMsg()
-
-                    return ApiClient.getPluginConfiguration(MyShows.pluginId).then((config) => {
-                        MyShows.configCache = config
-                        const userId = ApiClient.getCurrentUserId()
-                        const user = config.Users.find(e => e.Id == userId && e.AccessToken != null && e.AccessToken != '')
-
-                        if (user) {
-                            $("#config-container #ScrobbleAt").val(user.ScrobbleAt)
-                            $("#linked-account").text(user.Name)
-                            $("#config-container").show()
-                            $("#login-container").hide()
-                        } else {
-                            $("#config-container").hide()
-                            $("#login-container").show()
-                        }
-
-                        (typeof Dashboard.hideLoadingMsg === 'function') && Dashboard.hideLoadingMsg()
-                    })
-                },
-
-                saveConfig: () => {
-                    const userId = ApiClient.getCurrentUserId()
-                    const user = MyShows.configCache.Users.find(e => e.Id == userId)
-                    user.ScrobbleAt = $("#config-container #ScrobbleAt").val()
-                    return ApiClient.updatePluginConfiguration(MyShows.pluginId, MyShows.configCache).then(Dashboard.processPluginConfigurationUpdateResult)
-                }
-            }
-        </script>
     </div>
-</body>
-</html>
+</div>
