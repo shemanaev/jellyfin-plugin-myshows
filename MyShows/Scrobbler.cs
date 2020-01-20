@@ -107,7 +107,7 @@ namespace MyShows
                 var user = Plugin.Instance.Configuration.GetUserById(e.UserId);
 
                 // Can't progress
-                if (user == null || !CanSync(user, baseItem))
+                if (user == null || !CanSync(baseItem))
                 {
                     return;
                 }
@@ -149,7 +149,7 @@ namespace MyShows
             try
             {
                 _logger.LogInformation("Item is played. Scrobble");
-                
+
                 var result = await _client.GetApi(user.ApiVersion).CheckEpisode(user, episode);
                 _logger.LogInformation("Checked episode '{0}' S{1}E{2} {3}", episode.Series.Name,
                     episode.Season.IndexNumber, episode.IndexNumber, result ? "successfully" : "failed");
@@ -171,7 +171,7 @@ namespace MyShows
                 return false;
             }
 
-            if (!CanSync(user, item))
+            if (!CanSync(item))
             {
                 _logger.LogDebug("Can not sync this type of items: {0}", item.MediaType);
                 return false;
@@ -180,24 +180,23 @@ namespace MyShows
             return true;
         }
 
-        public bool CanSync(UserConfig user, BaseItem item)
+        public bool CanSync(BaseItem item)
         {
-            if (item.Path == null || item.LocationType == LocationType.Virtual)
+            if (item == null || item.Path == null || item.LocationType == LocationType.Virtual)
             {
                 return false;
             }
 
             if (item is Episode episode
                 && episode.Series != null
+                && episode.Season != null
+                && episode.Season.IndexNumber.HasValue
+                && episode.IndexNumber.HasValue
                 && !episode.IsMissingEpisode
-                && (episode.IndexNumber.HasValue || !string.IsNullOrEmpty(episode.GetProviderId(MetadataProviders.Tvdb))))
+                )
             {
-                var series = episode.Series;
-
-                return !string.IsNullOrEmpty(series.GetProviderId(MetadataProviders.Imdb))
-                    || !string.IsNullOrEmpty(series.GetProviderId(MetadataProviders.Tvdb))
-                    || !string.IsNullOrEmpty(series.GetProviderId(MetadataProviders.TvRage))
-                    || !string.IsNullOrEmpty(series.GetProviderId(MetadataProviders.TvMaze));
+                var (_, source) = episode.Series.GetBestProviderId();
+                return source != null;
             }
 
             return false;
