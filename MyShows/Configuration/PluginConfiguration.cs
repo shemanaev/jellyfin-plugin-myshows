@@ -32,6 +32,7 @@ namespace MyShows.Configuration
                 users[index] = user;
             }
             Users = users.ToArray();
+            Plugin.Instance.SaveConfiguration();
         }
 
         public void RemoveUser(UserConfig user)

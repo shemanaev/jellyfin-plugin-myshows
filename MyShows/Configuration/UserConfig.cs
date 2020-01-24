@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using System.Threading.Tasks;
 using MediaBrowser.Common.Net;
 using MediaBrowser.Model.Serialization;
@@ -59,6 +60,7 @@ namespace MyShows.Configuration
                 AccessToken = token.access_token;
                 RefreshToken = token.refresh_token;
                 ExpirationTime = DateTime.Now.AddSeconds(token.expires_in);
+                Plugin.Instance.SaveConfiguration();
                 return true;
             }
             catch (Exception)
@@ -70,10 +72,10 @@ namespace MyShows.Configuration
 
         private void RemoveSelf()
         {
-            foreach (var config in Plugin.Instance.Configuration.Users)
+            var self = Plugin.Instance.Configuration.Users.FirstOrDefault(user => user.Id.Equals(Id));
+            if (self != default(UserConfig))
             {
-                if (config.Id.Equals(Id))
-                    Plugin.Instance.Configuration.RemoveUser(config);
+                Plugin.Instance.Configuration.RemoveUser(self);
             }
         }
     }

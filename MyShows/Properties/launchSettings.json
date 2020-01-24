@@ -1,0 +1,10 @@
+{
+  "profiles": {
+    "Run Jellyfin": {
+        "commandName": "Executable",
+        "executablePath": "$(SolutionDir)..\\jellyfin_10.4.3\\jellyfin.exe",
+        "commandLineArgs": "-d $(SolutionDir)..\\jellyfin_10.4.3\\data",
+        "workingDirectory": "$(SolutionDir)..\\jellyfin_10.4.3"
+    }
+  }
+}

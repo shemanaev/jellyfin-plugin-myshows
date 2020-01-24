@@ -1,8 +1,8 @@
 ---
 name: "jellyfin-plugin-myshows"
 guid: "ef35f6b1-7fe6-44ca-a215-232089fb9bc7"
-version: "1.0.0"
-jellyfin_version: "10.4.0"
+version: "2"
+jellyfin_version: "10.4.3" # The earliest binary-compatible version
 nicename: "MyShows"
 description: "Scrobble your watched shows with MyShows.me"
 overview: >

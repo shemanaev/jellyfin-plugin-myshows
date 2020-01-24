@@ -7,6 +7,8 @@
     <Product>MyShows Jellyfin Plugin</Product>
     <Description></Description>
     <PackageProjectUrl></PackageProjectUrl>
+    <AssemblyVersion>2.0.0</AssemblyVersion>
+    <FileVersion>2.0.0</FileVersion>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
@@ -31,5 +33,9 @@
   <ItemGroup>
     <Folder Include="Properties\" />
   </ItemGroup>
+
+  <Target Name="PostBuild" AfterTargets="PostBuildEvent" Condition="$(ConfigurationName) == Debug">
+    <Exec Command="xcopy /Y &quot;$(TargetPath)&quot; &quot;$(SolutionDir)../jellyfin_10.4.3/data/plugins/MyShows/*&quot;" />
+  </Target>
 
 </Project>
