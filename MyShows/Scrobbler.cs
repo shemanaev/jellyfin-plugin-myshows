@@ -173,7 +173,7 @@ namespace MyShows
 
             if (!CanSync(item))
             {
-                _logger.LogDebug("Can not sync this type of items: {0}", item.MediaType);
+                _logger.LogDebug("Can not sync this type of items: {0}", item?.MediaType);
                 return false;
             }
 
