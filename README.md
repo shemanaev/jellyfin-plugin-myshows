@@ -3,7 +3,7 @@ MyShows.me integration for Jellyfin
 
 ## Installation
 
-Download latest release, unzip and place into `<jellyfin data>/plugins/MyShows` directory (create if not exists).
+Add repository with my plugins from [jellyfin-plugin-repo](https://github.com/shemanaev/jellyfin-plugin-repo).
 
 
 ## Configuration
