@@ -10,16 +10,16 @@ namespace MyShows
 
         public static (int, string) GetBestProviderId(this IHasProviderIds item)
         {
-            var imdb = item.GetProviderId(MetadataProviders.Imdb);
+            var imdb = item.GetProviderId(MetadataProvider.Imdb);
             if (!string.IsNullOrEmpty(imdb)) return (int.Parse(imdb.Replace("tt", "")), "imdb");
 
-            var tvrage = item.GetProviderId(MetadataProviders.TvRage);
+            var tvrage = item.GetProviderId(MetadataProvider.TvRage);
             if (!string.IsNullOrEmpty(tvrage)) return (int.Parse(tvrage), "tvrage");
 
-            var tvdb = item.GetProviderId(MetadataProviders.Tvdb);
+            var tvdb = item.GetProviderId(MetadataProvider.Tvdb);
             if (!string.IsNullOrEmpty(tvdb)) return (int.Parse(tvdb), "thetvdb");
 
-            var tvmaze = item.GetProviderId(MetadataProviders.TvMaze);
+            var tvmaze = item.GetProviderId(MetadataProvider.TvMaze);
             if (!string.IsNullOrEmpty(tvmaze)) return (int.Parse(tvmaze), "tvmaze");
 
             return (-1, null);

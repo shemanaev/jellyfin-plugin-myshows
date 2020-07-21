@@ -1,7 +1,7 @@
 ---
 name: "MyShows"
 guid: "ef35f6b1-7fe6-44ca-a215-232089fb9bc7"
-version: "3.0.0.1"
+version: "3.0.0.2"
 targetAbi: "10.6.0.0"
 overview: "Scrobble your watched shows with MyShows.me"
 description: >
@@ -11,4 +11,4 @@ owner: "shemanaev"
 artifacts:
   - "MyShows.dll"
 changelog: >
-  Updated for 10.6
+  Updated for 10.6. Again.
