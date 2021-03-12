@@ -1,11 +1,14 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net.Http;
+using System.Net.Http.Headers;
+using System.Text;
+using System.Text.Json;
 using System.Threading.Tasks;
+using MediaBrowser.Common.Json;
 using MediaBrowser.Common.Net;
 using MediaBrowser.Controller.Entities.TV;
-using MediaBrowser.Model.Entities;
-using MediaBrowser.Model.Serialization;
 using Microsoft.Extensions.Logging;
 using MyShows.Configuration;
 
@@ -14,18 +17,18 @@ namespace MyShows.MyShowsApi.Api20
     internal class MyShowsApi20 : IMyShowsApi
     {
         private readonly ILogger _logger;
-        private readonly IJsonSerializer _json;
-        private readonly IHttpClient _httpClient;
+        private readonly IHttpClientFactory _httpClientFactory;
         private int _counter = 1;
         private static readonly TimeSpan CACHED_SHOW_STORAGE_INTERVAL = TimeSpan.FromHours(24);
         private readonly ExpireableCache<string, ShowSummary> _showsCache = new ExpireableCache<string, ShowSummary>();
         private readonly List<Guid> _lastWatchedShows = new List<Guid>();
 
-        public MyShowsApi20(ILogger logger, IJsonSerializer json, IHttpClient httpClient)
+        public MyShowsApi20(
+            ILogger logger,
+            IHttpClientFactory httpClientFactory)
         {
             _logger = logger;
-            _json = json;
-            _httpClient = httpClient;
+            _httpClientFactory = httpClientFactory;
         }
 
         public async Task<bool> SetShowStatusToWatching(UserConfig user, Series item)
@@ -108,7 +111,7 @@ namespace MyShows.MyShowsApi.Api20
             if (source == null)
             {
                 _logger.LogWarning("Not found any provider id for show '{0}'", item.Name);
-                return default(ShowSummary);
+                return default;
             }
 
             var cacheKey = id.ToString() + source;
@@ -140,11 +143,11 @@ namespace MyShows.MyShowsApi.Api20
 
         private async Task<T> Execute<T>(UserConfig user, string method, object args)
         {
-            var isTokenValid = await user.EnsureAccessTokenValid(_json, _httpClient);
+            var isTokenValid = await user.EnsureAccessTokenValid(GetHttpClient());
             if (!isTokenValid)
             {
                 _logger.LogWarning("AccessToken invalidated and RefreshToken isn't helped. Too bad.");
-                return default(T);
+                return default;
             }
 
             var call = new JsonRpcCall
@@ -154,10 +157,11 @@ namespace MyShows.MyShowsApi.Api20
                 method = method,
                 @params = args,
             };
-            var options = GetOptions(user.AccessToken, call);
-            var response = await _httpClient.Post(options);
+            var httpClient = GetHttpClient(user.AccessToken);
+            var content = new StringContent(JsonSerializer.Serialize(call, JsonDefaults.GetOptions()), Encoding.UTF8, "application/json");
+            var response = await httpClient.PostAsync(ApiConstants.RpcUri, content);
 
-            var result = _json.DeserializeFromStream<JsonRpcResult<T>>(response.Content);
+            var result = await Extensions.DeserializeFromHttp<JsonRpcResult<T>>(response);
             if (result.error != null)
             {
                 _logger.LogWarning("JSON-RPC error: {0}", result.error.message);
@@ -165,20 +169,13 @@ namespace MyShows.MyShowsApi.Api20
             return result.result;
         }
 
-        private HttpRequestOptions GetOptions(string accessToken, object data)
+        private HttpClient GetHttpClient(string accessToken = null)
         {
-            var options = new HttpRequestOptions
-            {
-                RequestContentType = "application/json",
-                AcceptHeader = "application/json",
-                LogErrorResponseBody = true,
-                EnableDefaultUserAgent = true,
-                Url = ApiConstants.RpcUri,
-                RequestContent = _json.SerializeToString(data),
-            };
-            options.RequestHeaders.Add("Authorization", $"Bearer {accessToken}");
-
-            return options;
+            var client = _httpClientFactory.CreateClient(NamedClient.Default);
+            client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+            if (accessToken != null)
+                client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
+            return client;
         }
     }
 }

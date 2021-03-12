@@ -27,7 +27,7 @@ namespace MyShows
 
         public async Task AddEvent(UserConfig user, UserDataSaveEventArgs args)
         {
-            if (!(args.Item is Episode episode))
+            if (args.Item is not Episode episode)
             {
                 return;
             }
@@ -42,7 +42,7 @@ namespace MyShows
 
             if (!episodes.CurrentSeriesId.Equals(episode.Series.Id))
             {
-                if (episodes.CurrentSeriesId != default(Guid)) await SendData(episodes);
+                if (episodes.CurrentSeriesId != default) await SendData(episodes);
                 episodes.CurrentSeriesId = episode.Series.Id;
             }
 

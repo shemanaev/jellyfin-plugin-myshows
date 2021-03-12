@@ -1,8 +1,6 @@
 using System.Collections.Generic;
 using System.Net.Http;
 using System.Threading.Tasks;
-using MediaBrowser.Common.Net;
-using MediaBrowser.Model.Serialization;
 using MyShows.MyShowsApi.Api20;
 
 namespace MyShows
@@ -10,8 +8,7 @@ namespace MyShows
     internal class OAuthHelper
     {
         public static async Task<(OAuthToken, OAuthError)> GetToken(
-            IJsonSerializer json,
-            IHttpClient http,
+            HttpClient http,
             string login,
             string password
             )
@@ -25,12 +22,11 @@ namespace MyShows
                 new KeyValuePair<string, string>("password", password)
             });
 
-            return await SendRequest(json, http, formContent);
+            return await SendRequest(http, formContent);
         }
 
         public static async Task<(OAuthToken, OAuthError)> RefreshToken(
-            IJsonSerializer json,
-            IHttpClient http,
+            HttpClient http,
             string token
             )
         {
@@ -42,42 +38,24 @@ namespace MyShows
                 new KeyValuePair<string, string>("refresh_token", token)
             });
 
-            return await SendRequest(json, http, formContent);
+            return await SendRequest(http, formContent);
         }
 
         private static async Task<(OAuthToken, OAuthError)> SendRequest(
-            IJsonSerializer json,
-            IHttpClient http,
+            HttpClient httpClient,
             FormUrlEncodedContent data
             )
         {
-            var form = await data.ReadAsStringAsync();
+            var response = await httpClient.PostAsync(ApiConstants.OauthTokenUri, data).ConfigureAwait(false);
 
-            var options = GetOptions(form);
-            var response = await http.Post(options).ConfigureAwait(false);
-
-            if (!response.IsSuccessStatusCode())
+            if (!response.IsSuccessStatusCode)
             {
-                var error = json.DeserializeFromStream<OAuthError>(response.Content);
+                var error = await Extensions.DeserializeFromHttp<OAuthError>(response);
                 return (null, error);
             }
 
-            var resp = json.DeserializeFromStream<OAuthToken>(response.Content);
+            var resp = await Extensions.DeserializeFromHttp<OAuthToken>(response);
             return (resp, null);
-        }
-
-        private static HttpRequestOptions GetOptions(string content)
-        {
-            var options = new HttpRequestOptions
-            {
-                RequestContentType = "application/x-www-form-urlencoded",
-                LogErrorResponseBody = true,
-                EnableDefaultUserAgent = true,
-                Url = ApiConstants.OauthTokenUri,
-                RequestContent = content,
-            };
-
-            return options;
         }
     }
 

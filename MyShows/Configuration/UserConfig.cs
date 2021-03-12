@@ -1,8 +1,7 @@
 using System;
 using System.Linq;
+using System.Net.Http;
 using System.Threading.Tasks;
-using MediaBrowser.Common.Net;
-using MediaBrowser.Model.Serialization;
 using MyShows.MyShowsApi;
 
 namespace MyShows.Configuration
@@ -41,16 +40,17 @@ namespace MyShows.Configuration
         /// <summary>
         /// Ensure OAuth access_token is vaild and refresh if it's not.
         /// </summary>
-        /// <param name="json"></param>
+        /// <param name="
+        /// "></param>
         /// <param name="http"></param>
         /// <returns>true if you can use token</returns>
-        public async Task<bool> EnsureAccessTokenValid(IJsonSerializer json, IHttpClient http)
+        public async Task<bool> EnsureAccessTokenValid(HttpClient http)
         {
             if (DateTime.Compare(ExpirationTime, DateTime.Now) >= 0) return true;
 
             try
             {
-                var (token, error) = await OAuthHelper.RefreshToken(json, http, RefreshToken);
+                var (token, error) = await OAuthHelper.RefreshToken(http, RefreshToken);
                 if (error != null)
                 {
                     RemoveSelf();

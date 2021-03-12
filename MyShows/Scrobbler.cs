@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
+using System.Net.Http;
 using System.Threading.Tasks;
-using MediaBrowser.Common.Net;
 using MediaBrowser.Controller.Entities;
 using MediaBrowser.Controller.Entities.TV;
 using MediaBrowser.Controller.Library;
@@ -20,24 +20,23 @@ namespace MyShows
         private readonly ILogger _logger;
         private readonly ISessionManager _sessionManager;
         private readonly IUserDataManager _userDataManager;
+        private readonly List<Guid> _lastScrobbled;
         private MyShowsApiFactory _client;
         private UserDataHelper _userDataHelper;
         private DateTime _nextTry;
-        private List<Guid> _lastScrobbled;
 
         public Scrobbler(
-            IJsonSerializer json,
             ISessionManager sessionManager,
             IUserDataManager userDataManager,
             ILoggerFactory logger,
-            IHttpClient httpClient
+            IHttpClientFactory httpClientFactory
             )
         {
             _sessionManager = sessionManager;
             _userDataManager = userDataManager;
             _logger = logger.CreateLogger("MyShows");
 
-            _client = new MyShowsApiFactory(_logger, json, httpClient);
+            _client = new MyShowsApiFactory(_logger, httpClientFactory);
             _userDataHelper = new UserDataHelper(_logger, _client);
 
             _nextTry = DateTime.UtcNow;

@@ -1,13 +1,13 @@
-using MediaBrowser.Common.Net;
+using System.Net.Http;
+using System.Text.Json;
+using System.Threading.Tasks;
+using MediaBrowser.Common.Json;
 using MediaBrowser.Model.Entities;
 
 namespace MyShows
 {
     public static class Extensions
     {
-        public static bool IsSuccessStatusCode(this HttpResponseInfo response)
-            => ((int)response.StatusCode >= 200) && ((int)response.StatusCode <= 299);
-
         public static (int, string) GetBestProviderId(this IHasProviderIds item)
         {
             var imdb = item.GetProviderId(MetadataProvider.Imdb);
@@ -23,6 +23,13 @@ namespace MyShows
             if (!string.IsNullOrEmpty(tvmaze)) return (int.Parse(tvmaze), "tvmaze");
 
             return (-1, null);
+        }
+
+        public static async Task<T> DeserializeFromHttp<T>(HttpResponseMessage response)
+        {
+            var contentStream = await response.Content.ReadAsStreamAsync();
+            var result = await JsonSerializer.DeserializeAsync<T>(contentStream, JsonDefaults.GetOptions());
+            return result;
         }
     }
 }

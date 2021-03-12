@@ -1,8 +1,6 @@
 using System;
-using MediaBrowser.Common.Net;
-using MediaBrowser.Model.Serialization;
+using System.Net.Http;
 using Microsoft.Extensions.Logging;
-using MyShows.MyShowsApi.Api18;
 using MyShows.MyShowsApi.Api20;
 
 namespace MyShows.MyShowsApi
@@ -15,28 +13,21 @@ namespace MyShows.MyShowsApi
 
     internal class MyShowsApiFactory
     {
-        private readonly IMyShowsApi _api18;
         private readonly IMyShowsApi _api20;
 
-        public MyShowsApiFactory(ILogger logger, IJsonSerializer json, IHttpClient httpClient)
+        public MyShowsApiFactory(ILogger logger, IHttpClientFactory httpClient)
         {
-            _api18 = new MyShowsApi18(logger, json, httpClient);
-            _api20 = new MyShowsApi20(logger, json, httpClient);
+            _api20 = new MyShowsApi20(logger, httpClient);
         }
 
         public IMyShowsApi GetApi(MyShowsApiVersion version)
         {
-            switch (version)
+            return version switch
             {
-                case MyShowsApiVersion.V18:
-                    return _api18;
-
-                case MyShowsApiVersion.V20:
-                    return _api20;
-
-                default:
-                    throw new Exception("Unknown API version");
-            }
+                MyShowsApiVersion.V18 => throw new NotImplementedException(),
+                MyShowsApiVersion.V20 => _api20,
+                _ => throw new Exception("Unknown API version"),
+            };
         }
     }
 }
