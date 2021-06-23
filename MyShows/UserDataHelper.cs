@@ -17,7 +17,7 @@ namespace MyShows
         private readonly ILogger _logger;
         private readonly MyShowsApiFactory _client;
         private Timer _timer;
-        private readonly List<MarkedEpisodes> _episodes = new List<MarkedEpisodes>();
+        private readonly List<MarkedEpisodes> _episodes = new();
 
         public UserDataHelper(ILogger logger, MyShowsApiFactory client)
         {
@@ -68,8 +68,10 @@ namespace MyShows
 
         private async Task SendData(MarkedEpisodes episodes)
         {
-            var success = await _client.GetApi(episodes.User.ApiVersion).SyncEpisodes(episodes.User, episodes.SeenEpisodes, episodes.UnSeenEpisodes);
-            _logger.LogInformation("Synced {0} episodes: {1}", episodes.SeenEpisodes.Count + episodes.UnSeenEpisodes.Count, success ? "success" : "failed");
+            var success = await _client.GetApi(episodes.User.ApiVersion)
+                .SyncEpisodes(episodes.User, episodes.SeenEpisodes, episodes.UnSeenEpisodes);
+            _logger.LogInformation("Synced {0} episodes: {1}",
+                episodes.SeenEpisodes.Count + episodes.UnSeenEpisodes.Count, success ? "success" : "failed");
 
             episodes.SeenEpisodes.Clear();
             episodes.UnSeenEpisodes.Clear();
@@ -79,7 +81,8 @@ namespace MyShows
         {
             if (_timer == null)
             {
-                _timer = new Timer(OnTimerCallback, null, TimeSpan.FromMilliseconds(TIMER_DELAY), Timeout.InfiniteTimeSpan);
+                _timer = new Timer(OnTimerCallback, null, TimeSpan.FromMilliseconds(TIMER_DELAY),
+                    Timeout.InfiniteTimeSpan);
             }
             else
             {

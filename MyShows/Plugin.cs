@@ -32,12 +32,12 @@ namespace MyShows
                 new PluginPageInfo
                 {
                     Name = Name,
-                    EmbeddedResourcePath = string.Format("{0}.Configuration.configPage.html", GetType().Namespace)
+                    EmbeddedResourcePath = $"{GetType().Namespace}.Configuration.configPage.html"
                 },
                 new PluginPageInfo
                 {
                     Name = "myshows.js",
-                    EmbeddedResourcePath = string.Format("{0}.Configuration.myshows.js", GetType().Namespace)
+                    EmbeddedResourcePath = $"{GetType().Namespace}.Configuration.myshows.js"
                 },
             };
         }

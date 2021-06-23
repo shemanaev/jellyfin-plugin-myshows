@@ -68,8 +68,14 @@ namespace MyShows.MyShowsApi.Api20
         public int episodeNumber { get; set; }
     }
 
-    //public class SuccessAnswer
-    //{
-    //    public bool result { get; set; }
-    //}
+    public class ProfileShowStatuses
+    {
+        public int[] showIds { get; set; }
+    }
+
+    public class ShowStatus
+    {
+        public int showId { get; set; }
+        public string watchStatus { get; set; }
+    }
 }

@@ -16,7 +16,7 @@ namespace MyShows.Configuration
         public UserConfig GetUserById(Guid id)
         {
             var gid = id.ToString().Replace("-", "");
-            return Users.Where(c => c.Id == gid).FirstOrDefault();
+            return Users.FirstOrDefault(c => c.Id == gid);
         }
 
         public void AddUser(UserConfig user)

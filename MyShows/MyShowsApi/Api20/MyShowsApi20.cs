@@ -20,8 +20,8 @@ namespace MyShows.MyShowsApi.Api20
         private readonly IHttpClientFactory _httpClientFactory;
         private int _counter = 1;
         private static readonly TimeSpan CACHED_SHOW_STORAGE_INTERVAL = TimeSpan.FromHours(24);
-        private readonly ExpireableCache<string, ShowSummary> _showsCache = new ExpireableCache<string, ShowSummary>();
-        private readonly List<Guid> _lastWatchedShows = new List<Guid>();
+        private readonly ExpireableCache<string, ShowSummary> _showsCache = new();
+        private readonly List<Guid> _lastWatchedShows = new();
 
         public MyShowsApi20(
             ILogger logger,
@@ -37,6 +37,17 @@ namespace MyShows.MyShowsApi.Api20
 
             var show = await GetShow(user, item);
             if (show == default(ShowSummary)) return false;
+
+            var showStatus = await Execute<ShowStatus[]>(user, "profile.ShowStatuses", new ProfileShowStatuses
+            {
+                showIds = new[] {show.id}
+            });
+
+            if (showStatus.FirstOrDefault()?.watchStatus == "watching")
+            {
+                _lastWatchedShows.Add(item.Id);
+                return true;
+            }
 
             var success = await Execute<bool>(user, "manage.SetShowStatus", new ManageSetShowStatusArgs
             {

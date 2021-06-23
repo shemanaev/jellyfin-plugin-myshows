@@ -8,7 +8,7 @@ namespace MyShows
     internal class ExpireableCache<TKey, TValue>
     {
         private static readonly TimeSpan CLEANUP_TIMER_INTERVAL = TimeSpan.FromMinutes(30);
-        private readonly Dictionary<TKey, CacheItem<TValue>> _cache = new Dictionary<TKey, CacheItem<TValue>>();
+        private readonly Dictionary<TKey, CacheItem<TValue>> _cache = new();
         private readonly Timer _timer;
 
         public ExpireableCache()
@@ -23,13 +23,13 @@ namespace MyShows
 
         public TValue Get(TKey key)
         {
-            if (!_cache.ContainsKey(key)) return default(TValue);
+            if (!_cache.ContainsKey(key)) return default;
 
             var cached = _cache[key];
             if (DateTimeOffset.Now - cached.Created >= cached.ExpiresAfter)
             {
                 _cache.Remove(key);
-                return default(TValue);
+                return default;
             }
 
             return cached.Value;
@@ -37,7 +37,8 @@ namespace MyShows
 
         private void OnTimerCallback(object state)
         {
-            foreach (var item in _cache.Where(kv => DateTimeOffset.Now - kv.Value.Created >= kv.Value.ExpiresAfter).ToList())
+            foreach (var item in _cache.Where(kv => DateTimeOffset.Now - kv.Value.Created >= kv.Value.ExpiresAfter)
+                .ToList())
             {
                 _cache.Remove(item.Key);
             }

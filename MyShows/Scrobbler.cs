@@ -71,11 +71,13 @@ namespace MyShows
 
             if (!CheckConstraintsAndGetUser(e.Session.UserId, e.Item, out var user)) return;
 
+            if (e.Session.PlayState.PositionTicks == null || e.Session.NowPlayingItem.RunTimeTicks == null) return;
+
             // don't scrobble if percentage watched is below 90%
             float percentageWatched = (float)e.Session.PlayState.PositionTicks / (float)e.Session.NowPlayingItem.RunTimeTicks * 100f;
             if (percentageWatched < user.ScrobbleAt) return;
 
-            var episode = e.Item as Episode;
+            if (e.Item is not Episode episode) return;
             if (_lastScrobbled.Contains(episode.Id)) return;
 
             try
@@ -101,18 +103,17 @@ namespace MyShows
                 return;
             }
 
-            if (e.Item is BaseItem baseItem)
+            if (e.Item == null) return;
+
+            var user = Plugin.Instance.Configuration.GetUserById(e.UserId);
+
+            // Can't progress
+            if (user == null || !CanSync(e.Item))
             {
-                var user = Plugin.Instance.Configuration.GetUserById(e.UserId);
-
-                // Can't progress
-                if (user == null || !CanSync(baseItem))
-                {
-                    return;
-                }
-
-                await _userDataHelper.AddEvent(user, e);
+                return;
             }
+
+            await _userDataHelper.AddEvent(user, e);
         }
 
         private async void OnPlaybackStart(object sender, PlaybackProgressEventArgs e)
@@ -123,7 +124,7 @@ namespace MyShows
 
             try
             {
-                var episode = e.Item as Episode;
+                if (e.Item is not Episode episode) return;
                 var result = await _client.GetApi(user.ApiVersion).SetShowStatusToWatching(user, episode.Series);
                 _logger.LogDebug("Started watching show '{0}' {1}", episode.Series.Name, result ? "successfully" : "failed");
             }
@@ -142,7 +143,7 @@ namespace MyShows
 
             if (!e.PlayedToCompletion) return;
 
-            var episode = e.Item as Episode;
+            if (e.Item is not Episode episode) return;
             if (_lastScrobbled.Contains(episode.Id)) return;
 
             try
@@ -181,7 +182,7 @@ namespace MyShows
 
         public bool CanSync(BaseItem item)
         {
-            if (item == null || item.Path == null || item.LocationType == LocationType.Virtual)
+            if (item?.Path == null || item.LocationType == LocationType.Virtual)
             {
                 return false;
             }

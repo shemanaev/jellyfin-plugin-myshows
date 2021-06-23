@@ -1,7 +1,7 @@
 ---
 name: "MyShows"
 guid: "ef35f6b1-7fe6-44ca-a215-232089fb9bc7"
-version: "4.0.0.0"
+version: "4.0.0.1"
 targetAbi: "10.7.0.0"
 framework: "net5.0"
 overview: "Scrobble your watched shows with MyShows.me"
@@ -12,4 +12,4 @@ owner: "shemanaev"
 artifacts:
   - "MyShows.dll"
 changelog: >
-  Updated for 10.7.
+  Fixed NPE
