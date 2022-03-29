@@ -1,7 +1,7 @@
 using System.Net.Http;
 using System.Text.Json;
 using System.Threading.Tasks;
-using MediaBrowser.Common.Json;
+using Jellyfin.Extensions.Json;
 using MediaBrowser.Model.Entities;
 
 namespace MyShows
@@ -28,7 +28,7 @@ namespace MyShows
         public static async Task<T> DeserializeFromHttp<T>(HttpResponseMessage response)
         {
             var contentStream = await response.Content.ReadAsStreamAsync();
-            var result = await JsonSerializer.DeserializeAsync<T>(contentStream, JsonDefaults.GetOptions());
+            var result = await JsonSerializer.DeserializeAsync<T>(contentStream, JsonDefaults.Options);
             return result;
         }
     }

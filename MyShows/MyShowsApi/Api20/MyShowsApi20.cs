@@ -6,7 +6,7 @@ using System.Net.Http.Headers;
 using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
-using MediaBrowser.Common.Json;
+using Jellyfin.Extensions.Json;
 using MediaBrowser.Common.Net;
 using MediaBrowser.Controller.Entities.TV;
 using Microsoft.Extensions.Logging;
@@ -169,7 +169,7 @@ namespace MyShows.MyShowsApi.Api20
                 @params = args,
             };
             var httpClient = GetHttpClient(user.AccessToken);
-            var content = new StringContent(JsonSerializer.Serialize(call, JsonDefaults.GetOptions()), Encoding.UTF8, "application/json");
+            var content = new StringContent(JsonSerializer.Serialize(call, JsonDefaults.Options), Encoding.UTF8, "application/json");
             var response = await httpClient.PostAsync(ApiConstants.RpcUri, content);
 
             var result = await Extensions.DeserializeFromHttp<JsonRpcResult<T>>(response);
