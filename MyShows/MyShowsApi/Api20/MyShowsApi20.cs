@@ -175,7 +175,8 @@ namespace MyShows.MyShowsApi.Api20
             var result = await Extensions.DeserializeFromHttp<JsonRpcResult<T>>(response);
             if (result.error != null)
             {
-                _logger.LogWarning("JSON-RPC error: {0}", result.error.message);
+                _logger.LogWarning("access token: {0}, request: '{1}'", user.AccessToken, JsonSerializer.Serialize(call, JsonDefaults.Options));
+                _logger.LogWarning("JSON-RPC error: id: {0}, {1} - {2}", result.id, result.error.code, result.error.message);
             }
             return result.result;
         }
