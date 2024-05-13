@@ -1,21 +1,21 @@
 using System;
 using System.Collections.Generic;
 using System.Net.Http;
+using System.Threading;
 using System.Threading.Tasks;
 using MediaBrowser.Controller.Entities;
 using MediaBrowser.Controller.Entities.TV;
 using MediaBrowser.Controller.Library;
-using MediaBrowser.Controller.Plugins;
 using MediaBrowser.Controller.Session;
 using MediaBrowser.Model.Entities;
-using MediaBrowser.Model.Serialization;
+using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using MyShows.Configuration;
 using MyShows.MyShowsApi;
 
 namespace MyShows
 {
-    public class Scrobbler : IServerEntryPoint
+    public class Scrobbler : IHostedService
     {
         private readonly ILogger _logger;
         private readonly ISessionManager _sessionManager;
@@ -43,7 +43,7 @@ namespace MyShows
             _lastScrobbled = new List<Guid>();
         }
 
-        public void Dispose()
+        public Task StopAsync(CancellationToken cancellationToken)
         {
             _userDataManager.UserDataSaved -= OnUserDataSaved;
             _sessionManager.PlaybackStart -= OnPlaybackStart;
@@ -52,9 +52,11 @@ namespace MyShows
 
             _client = null;
             _userDataHelper = null;
+
+            return Task.CompletedTask;
         }
 
-        public Task RunAsync()
+        public Task StartAsync(CancellationToken cancellationToken)
         {
             _userDataManager.UserDataSaved += OnUserDataSaved;
             _sessionManager.PlaybackStart += OnPlaybackStart;
